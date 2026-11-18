@@ -41,9 +41,9 @@
       },
       options: [
         { id: 'q2a', correct: true, ar: 'فحص القدمين يوميًا وارتداء حذاء مناسب.', en: 'Checking the feet daily and wearing suitable shoes.' },
-        { id: 'q2b', correct: false, ar: 'إهمال الجروح الصغيرة.', en: 'Neglecting small wounds.' },
-        { id: 'q2c', correct: false, ar: 'المشي حافي القدمين.', en: 'Walking barefoot.' },
-        { id: 'q2d', correct: false, ar: 'ارتداء الأحذية الضيقة.', en: 'Wearing tight shoes.' }
+        { id: 'q2b', correct: false, ar: 'فحص القدمين أسبوعيًا وارتداء حذاء مناسب.', en: 'Checking the feet weekly and wearing suitable shoes.' },
+        { id: 'q2c', correct: false, ar: 'فحص القدمين يوميًا وارتداء حذاء ضيق لتثبيتهما.', en: 'Checking the feet daily and wearing tight shoes to hold them in place.' },
+        { id: 'q2d', correct: false, ar: 'فحص القدمين يوميًا والمشي حافيًا داخل المنزل.', en: 'Checking the feet daily and walking barefoot at home.' }
       ]
     },
     {
@@ -54,10 +54,10 @@
         en: 'Why can diabetic foot be dangerous?'
       },
       options: [
-        { id: 'q3a', correct: false, ar: 'لأنها تسبب التعب فقط.', en: 'Because it only causes fatigue.' },
-        { id: 'q3b', correct: true, ar: 'لأنها قد تؤدي إلى تقرحات والتهابات وقد تصل إلى البتر.', en: 'Because it may lead to ulcers and infections, and may even lead to amputation.' },
-        { id: 'q3c', correct: false, ar: 'لأنها تسبب تغير لون الأظافر فقط.', en: 'Because it only causes nail discolouration.' },
-        { id: 'q3d', correct: false, ar: 'لأنها تسبب ألمًا مؤقتًا.', en: 'Because it causes temporary pain.' }
+        { id: 'q3a', correct: true, ar: 'لأنها قد تسبب تقرحات والتهابات وقد تصل إلى البتر.', en: 'Because it may cause ulcers and infections, and may even lead to amputation.' },
+        { id: 'q3b', correct: false, ar: 'لأنها قد تسبب تقرحات سطحية دون التأثير على الأنسجة العميقة.', en: 'Because it may cause superficial ulcers without affecting the deeper tissues.' },
+        { id: 'q3c', correct: false, ar: 'لأنها قد تسبب ضعف الإحساس دون التأثير على التئام الجروح.', en: 'Because it may cause reduced sensation without affecting wound healing.' },
+        { id: 'q3d', correct: false, ar: 'لأنها قد تسبب ضعف الدورة الدموية دون زيادة خطر العدوى.', en: 'Because it may cause poor blood circulation without increasing the risk of infection.' }
       ]
     }
   ];

@@ -127,8 +127,8 @@ with sync_playwright() as p:
     st3 = page.evaluate('__dfc.state()')
     check('reload resumes the same attempt', st3['id'] == before_id and st3['qIndex'] == 1)
     answer(page, [])  # keep q2a, confirm
-    page.click('[data-id="q3a"]'); page.click('[data-id="q3b"]')
-    check('single choice keeps only one selection', page.evaluate('__dfc.state().selected') == ['q3b'])
+    page.click('[data-id="q3b"]'); page.click('[data-id="q3a"]')
+    check('single choice keeps only one selection', page.evaluate('__dfc.state().selected') == ['q3a'])
     page.click('#btn-confirm'); page.clock.run_for(2000)
     page.wait_for_selector('#screen-results:not([hidden])')
     rows = attempts(page)
@@ -144,7 +144,7 @@ with sync_playwright() as p:
     check('result kept after going home, no repeat', len(attempts(page)) == 1)
 
     # ---------- 5-9. scoring cases, bonus, 100 cap, ranking ----------
-    play(page, 'كامل سريع', ALL9, ['q2a'], ['q3b'])
+    play(page, 'كامل سريع', ALL9, ['q2a'], ['q3a'])
     r = [x for x in attempts(page) if x['name'] == 'كامل سريع'][0]
     check('all nine options = 54 + 18 + 18 = 90 base', r['baseScore'] == 90 and r['q1Correct'] == 9)
     check('speed bonus granted (>0, ≤10)', 0 < r['bonusTenths'] <= 100, r['bonusTenths'])
@@ -153,9 +153,9 @@ with sync_playwright() as p:
     check('player highlighted in the board', page.query_selector('#board-res .board-item.me') is not None)
     page.click('#btn-home')
     for n, q1 in [('لاعب 3', ALL9[:3]), ('لاعب 4', ALL9[:4]), ('لاعب 5', ALL9[:5]), ('لاعب 6', ALL9[:6])]:
-        play(page, n, q1, ['q2a'], ['q3a'], think_ms=4000)
+        play(page, n, q1, ['q2a'], ['q3b'], think_ms=4000)
         page.click('#btn-home')
-    play(page, 'الأخير', [], ['q2b'], ['q3a'], think_ms=1000)
+    play(page, 'الأخير', [], ['q2b'], ['q3b'], think_ms=1000)
     check('outside top five: real rank shown below the list', page.query_selector('#board-res .board-sep') is not None and page.query_selector('#board-res .board-item.me') is not None)
     check('no congrats when outside top five', not page.is_visible('.congrats'))
     ranked = page.evaluate('Scoring.rank(await DB.allAttempts()).map(r => r.name)') if False else page.evaluate('DB.allAttempts().then(a => Scoring.rank(a).map(r => r.name))')
@@ -218,7 +218,7 @@ with sync_playwright() as p:
     page.click('#tab-manage'); page.click('#act-tests'); page.click('#modal-actions button:has-text("تأكيد")'); page.wait_for_timeout(400)
     check('delete test results', len(attempts(page)) == 6)
     # duplicates
-    page.goto(BASE + 'index.html'); play(page, 'لاعب 3', ALL9, ['q2a'], ['q3b']); page.click('#btn-home')
+    page.goto(BASE + 'index.html'); play(page, 'لاعب 3', ALL9, ['q2a'], ['q3a']); page.click('#btn-home')
     page.goto(BASE + 'admin.html'); page.wait_for_selector('#dash:not([hidden])')
     page.click('#tab-manage'); page.click('#act-dupes'); page.click('#modal-actions button:has-text("تأكيد")'); page.wait_for_timeout(400)
     names = [a['name'] for a in attempts(page)]
@@ -276,7 +276,7 @@ with sync_playwright() as p:
     page.click('#btn-start'); page.fill('#name', 'دون إنترنت'); page.click('#btn-begin'); page.wait_for_selector('#screen-quiz:not([hidden])')
     page.wait_for_timeout(3900); page.click('[data-id="q1o1"]'); page.click('#btn-confirm'); page.wait_for_timeout(1300)
     page.click('[data-id="q2a"]'); page.click('#btn-confirm'); page.wait_for_timeout(1300)
-    page.click('[data-id="q3b"]'); page.click('#btn-confirm'); page.wait_for_selector('#screen-results:not([hidden])', timeout=6000)
+    page.click('[data-id="q3a"]'); page.click('#btn-confirm'); page.wait_for_selector('#screen-results:not([hidden])', timeout=6000)
     check('full round offline is saved', any(a['name'] == 'دون إنترنت' and a['status'] == 'completed' for a in attempts(page)))
     page.goto(OFF + 'admin.html'); page.wait_for_selector('#auth:not([hidden])')
     check('admin page works offline', page.is_visible('#auth-form'))
@@ -289,7 +289,7 @@ with sync_playwright() as p:
         pg = pctx.pages[0] if pctx.pages else pctx.new_page(); watch(pg, 'persist')
         pg.goto(BASE + 'index.html'); pg.click('#btn-start'); pg.fill('#name', 'باقٍ بعد الإغلاق'); pg.click('#btn-begin')
         pg.wait_for_selector('#screen-quiz:not([hidden])'); pg.wait_for_timeout(3900)
-        for q, o in (('q1', 'q1o1'), ('q2', 'q2a'), ('q3', 'q3b')):
+        for q, o in (('q1', 'q1o1'), ('q2', 'q2a'), ('q3', 'q3a')):
             pg.click('[data-id="%s"]' % o); pg.click('#btn-confirm'); pg.wait_for_timeout(1300)
         pg.wait_for_selector('#screen-results:not([hidden])', timeout=6000)
         pctx.close()
@@ -314,7 +314,7 @@ with sync_playwright() as p:
             noh = page.evaluate('document.documentElement.scrollWidth <= innerWidth')
             start(page, 'Layout تجربة')
             fits = []
-            for qi, ids in enumerate((ALL9, ['q2a'], ['q3b'])):
+            for qi, ids in enumerate((ALL9, ['q2a'], ['q3a'])):
                 for i in ids: page.click('[data-id="%s"]' % i)
                 fits.append(page.evaluate('[document.documentElement.scrollHeight - innerHeight, document.documentElement.scrollWidth - innerWidth]'))
                 if qi == 0 and lang == 'ar': page.screenshot(path=os.path.join(tempfile.gettempdir(), 'dfc_q1_%dx%d.png' % (w, h)))

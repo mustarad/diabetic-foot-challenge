@@ -3,7 +3,7 @@
  * فتعمل الصفحة بعدها دون إنترنت ودون خادم.
  * (لا يعمل عند فتح الملف مباشرة file:// — وهذا طبيعي.)
  */
-var CACHE = 'dfc-v1.1.0';
+var CACHE = 'dfc-v1.2.0';
 var FILES = [
   './', 'index.html', 'admin.html', 'manifest.webmanifest',
   'css/fonts.css', 'css/main.css', 'css/admin.css', 'css/motion.css',

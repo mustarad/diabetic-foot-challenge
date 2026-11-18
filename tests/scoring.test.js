@@ -10,12 +10,12 @@ const q1 = Q[0], q2 = Q[1], q3 = Q[2];
 const all9 = q1.options.map(o => o.id);
 const ans = (qid, selected, timeMs, timedOut) => ({ qid, selected, timeMs, timedOut: !!timedOut });
 
-test('approved questions: 3 questions, Q1 has 9 options all correct, Q2=a, Q3=b', () => {
+test('approved questions: 3 questions, Q1 has 9 options all correct, Q2=a, Q3=a', () => {
   assert.equal(Q.length, 3);
   assert.equal(q1.options.length, 9);
   assert.ok(q1.options.every(o => o.correct));
   assert.deepEqual(q2.options.filter(o => o.correct).map(o => o.id), ['q2a']);
-  assert.deepEqual(q3.options.filter(o => o.correct).map(o => o.id), ['q3b']);
+  assert.deepEqual(q3.options.filter(o => o.correct).map(o => o.id), ['q3a']);
 });
 
 test('Q1: each correct choice = 6 points, all nine = 54', () => {
@@ -47,9 +47,9 @@ test('Q2 and Q3: correct = 18, wrong or empty = 0', () => {
   assert.equal(S.scoreQuestion(q2, ['q2a']).points, 18);
   assert.equal(S.scoreQuestion(q2, ['q2b']).points, 0);
   assert.equal(S.scoreQuestion(q2, []).points, 0);
-  assert.equal(S.scoreQuestion(q3, ['q3b']).points, 18);
-  assert.equal(S.scoreQuestion(q3, ['q3a']).points, 0);
-  assert.equal(S.scoreQuestion(q3, ['q3b', 'q3a']).points, 0); // single choice cannot hold two
+  assert.equal(S.scoreQuestion(q3, ['q3a']).points, 18);
+  assert.equal(S.scoreQuestion(q3, ['q3b']).points, 0);
+  assert.equal(S.scoreQuestion(q3, ['q3a', 'q3b']).points, 0); // single choice cannot hold two
 });
 
 test('speed bonus: proportional to remaining time, 0 when full time used, max 10', () => {
@@ -65,14 +65,14 @@ test('speed bonus: proportional to remaining time, 0 when full time used, max 10
 });
 
 test('perfect fast attempt: 90 base + bonus, never above 100', () => {
-  const r = S.scoreAttempt(Q, [ans('q1', all9, 9000), ans('q2', ['q2a'], 3000), ans('q3', ['q3b'], 3000)]);
+  const r = S.scoreAttempt(Q, [ans('q1', all9, 9000), ans('q2', ['q2a'], 3000), ans('q3', ['q3a'], 3000)]);
   assert.equal(r.baseScore, 90);
   assert.equal(r.timeMs, 15000);
   assert.equal(r.bonusTenths, Math.round(75000 * 100 / 90000)); // 83 -> 8.3
   assert.equal(r.score, 98.3);
   assert.equal(r.correctCount, 3);
   assert.equal(r.q1Correct, 9);
-  const instant = S.scoreAttempt(Q, [ans('q1', all9, 0), ans('q2', ['q2a'], 0), ans('q3', ['q3b'], 0)]);
+  const instant = S.scoreAttempt(Q, [ans('q1', all9, 0), ans('q2', ['q2a'], 0), ans('q3', ['q3a'], 0)]);
   assert.equal(instant.score, 100);
   assert.ok(instant.scoreTenths <= 1000);
 });
@@ -93,7 +93,7 @@ test('missing answers are treated as timed-out and empty', () => {
 });
 
 test('times above 30 s per question are clamped', () => {
-  const r = S.scoreAttempt(Q, [ans('q1', all9, 999999), ans('q2', ['q2a'], 30000), ans('q3', ['q3b'], 30000)]);
+  const r = S.scoreAttempt(Q, [ans('q1', all9, 999999), ans('q2', ['q2a'], 30000), ans('q3', ['q3a'], 30000)]);
   assert.equal(r.timeMs, 90000);
   assert.equal(r.score, 90);
 });
