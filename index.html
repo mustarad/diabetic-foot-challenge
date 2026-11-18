@@ -57,6 +57,7 @@
         <aside class="card board" aria-labelledby="board-title-home">
           <div class="board-head"><span id="board-icon-home"></span><h2 id="board-title-home" data-i18n="top5"></h2></div>
           <ol class="board-list" id="board-home"></ol>
+          <button type="button" class="btn board-reset" id="btn-reset"></button>
         </aside>
         <div class="band home-band" aria-hidden="true"></div>
       </div>
@@ -143,6 +144,17 @@
 
   <div class="overlay" id="overlay" hidden role="alertdialog" aria-modal="true" aria-labelledby="overlay-title">
     <div class="overlay-box"><span id="overlay-icon"></span><h2 id="overlay-title"></h2><p id="overlay-text"></p></div>
+  </div>
+  <div class="overlay" id="confirm" hidden role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-text">
+    <div class="overlay-box confirm-box">
+      <span id="confirm-icon"></span>
+      <h2 id="confirm-title"></h2>
+      <p id="confirm-text"></p>
+      <div class="actions-row">
+        <button type="button" class="btn btn-secondary btn-lg" id="confirm-no"></button>
+        <button type="button" class="btn btn-danger btn-lg" id="confirm-yes"></button>
+      </div>
+    </div>
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 

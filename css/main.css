@@ -445,6 +445,20 @@ main { position: relative; }
 
 .confetti-canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 70; }
 
+/* reset rankings (home) + confirmation dialog */
+.board-reset {
+  align-self: center; min-height: 48px; padding: 0 var(--s4);
+  background: transparent; color: var(--text-muted); border: 1px dashed var(--border-strong);
+  font-family: var(--font-text); font-size: 16px; font-weight: 600;
+}
+.board-reset .icon { width: 20px; height: 20px; }
+.board-reset:hover { color: var(--accent); border-color: var(--accent-line); }
+.btn-danger { background: var(--accent); color: #FFFFFF; border-color: var(--accent); }
+:root[data-theme="dark"] .btn-danger { color: var(--night-900); }
+.confirm-box { max-width: min(560px, calc(100vw - 32px)); }
+.confirm-box p { line-height: 1.7; }
+.confirm-box .actions-row { justify-content: center; margin-top: var(--s3); }
+
 /* ---------------- responsive ---------------- */
 /* iPad landscape is the primary layout (≥1024 wide). */
 @media (max-height: 820px) and (orientation: landscape) {

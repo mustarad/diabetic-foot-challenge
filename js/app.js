@@ -46,6 +46,7 @@
       status: 'in_progress',
       startedAtMs: state.startedAtMs,
       startedAt: new Date(state.startedAtMs).toISOString(),
+      orders: state.orders || null,
       answers: state.answers.slice()
     };
     return Object.assign(r, extra || {});
@@ -111,6 +112,7 @@
     var cn = $('closed-note');
     cn.hidden = quizOpen;
     cn.innerHTML = UI.icon('lock') + '<div><strong>' + UI.esc(t('closedTitle')) + '</strong><span>' + UI.esc(t('closedDesc')) + '</span></div>';
+    $('btn-reset').innerHTML = UI.icon('trash') + '<span>' + UI.esc(t('resetBoard')) + '</span>';
     return loadRanked().then(function (r) { renderBoard($('board-home'), r, null); });
   }
   function goHome() {
@@ -122,6 +124,28 @@
       show('home');
       return renderHome();
     }).then(function () { focusHeading('home-title'); });
+  }
+
+  // ---------------- reset rankings (home button, confirmation only) ----------------
+  function openResetConfirm() {
+    $('confirm-icon').innerHTML = UI.icon('trash');
+    $('confirm-title').textContent = t('resetBoardTitle');
+    $('confirm-text').textContent = t('resetBoardText');
+    $('confirm-no').textContent = t('cancel');
+    $('confirm-yes').textContent = t('resetBoardYes');
+    $('confirm-yes').disabled = false;
+    $('confirm').hidden = false;
+    $('confirm-no').focus();
+  }
+  function closeResetConfirm() { $('confirm').hidden = true; }
+  function doReset() {
+    $('confirm-yes').disabled = true;
+    DB.clearAttempts().then(function () {
+      clearState();
+      closeResetConfirm();
+      return renderHome();
+    }).then(function () { toast(t('resetBoardDone')); })
+      .catch(function () { closeResetConfirm(); toast(t('storageError')); });
   }
 
   // ---------------- register ----------------
@@ -171,6 +195,7 @@
         isTest: testMode,
         startedAtMs: now,
         qIndex: 0,
+        orders: shuffledOrders(),
         qStartMs: now + COUNTDOWN_MS,
         selected: [],
         answers: [],
@@ -196,6 +221,26 @@
   // ---------------- quiz ----------------
   function currentQ() { return Q[state.qIndex]; }
 
+  /** a fresh random answer order for every player (Fisher–Yates with crypto randomness) */
+  function shuffledOrders() {
+    var orders = {};
+    Q.forEach(function (q) {
+      var ids = q.options.map(function (o) { return o.id; });
+      for (var i = ids.length - 1; i > 0; i--) {
+        var r = new Uint32Array(1); window.crypto.getRandomValues(r);
+        var j = r[0] % (i + 1), tmp = ids[i]; ids[i] = ids[j]; ids[j] = tmp;
+      }
+      orders[q.id] = ids;
+    });
+    return orders;
+  }
+  /** options of a question in this player's order (kept across reloads and language changes) */
+  function orderedOptions(q) {
+    var order = state && state.orders && state.orders[q.id];
+    if (!order || order.length !== q.options.length) return q.options;
+    return order.map(function (id) { return q.options.filter(function (o) { return o.id === id; })[0]; }).filter(Boolean);
+  }
+
   function renderQuestion(animate) {
     var q = currentQ(), i = state.qIndex;
     $('q-progress-label').textContent = t('questionOf', i + 1, Q.length);
@@ -217,7 +262,7 @@
     list.setAttribute('role', q.type === 'multi' ? 'group' : 'radiogroup');
     list.setAttribute('aria-labelledby', 'q-text');
     list.classList.toggle('stagger', !!animate);
-    list.innerHTML = q.options.map(function (o, k) {
+    list.innerHTML = orderedOptions(q).map(function (o, k) {
       var on = state.selected.indexOf(o.id) !== -1;
       var mark = q.type === 'multi' ? UI.icon('check') : '<span>' + t('letters')[k] + '</span>';
       return '<li style="--i:' + k + '"><button type="button" class="opt" role="' + (q.type === 'multi' ? 'checkbox' : 'radio') + '" aria-checked="' + on + '" data-id="' + o.id + '">' +
@@ -495,6 +540,7 @@
   function rerender() {
     I18N.apply(document);
     document.title = t('appTitle');
+    if (!$('confirm').hidden) openResetConfirm();
     if (screen === 'home') renderHome();
     else if (screen === 'register') renderRegister();
     else if (screen === 'quiz' && state && state.phase === 'question' && state.qIndex < Q.length) {
@@ -564,6 +610,11 @@
     bindAdminEntry();
 
     $('btn-start').addEventListener('click', goRegister);
+    $('btn-reset').addEventListener('click', openResetConfirm);
+    $('confirm-no').addEventListener('click', closeResetConfirm);
+    $('confirm-yes').addEventListener('click', doReset);
+    $('confirm').addEventListener('click', function (e) { if (e.target === this) closeResetConfirm(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('confirm').hidden) closeResetConfirm(); });
     $('form-register').addEventListener('submit', begin);
     $('btn-reg-back').addEventListener('click', goHome);
     $('name').addEventListener('input', function () {

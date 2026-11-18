@@ -140,6 +140,7 @@ with sync_playwright() as p:
     check('reload on results does not duplicate', len(attempts(page)) == 1)
     page.click('#btn-home')
     page.wait_for_selector('#screen-home:not([hidden])')
+    page.wait_for_selector('#board-home .board-item')
     check('back home shows the question and updated top five', 'هل ترغب في خوض التحدي؟' in page.inner_text('#screen-home') and 'مختبر الوقت' in page.inner_text('#board-home'))
     check('result kept after going home, no repeat', len(attempts(page)) == 1)
 
@@ -302,6 +303,41 @@ with sync_playwright() as p:
         pctx.close()
     finally:
         shutil.rmtree(udir, ignore_errors=True)
+
+    # ---------- random answer order + reset button on the home page ----------
+    ctx, page = new_page(browser)
+    page.goto(BASE + 'index.html')
+    positions = set(); orders = set()
+    for k in range(8):
+        start(page, 'ترتيب %d' % k)
+        st = page.evaluate('__dfc.state()')
+        orders.add(tuple(st['orders']['q2']))
+        page.clock.run_for(31000); page.clock.run_for(2500)   # let Q1 time out to reach Q2
+        ids = page.eval_on_selector_all('#q-options .opt', 'e => e.map(x => x.dataset.id)')
+        positions.add(ids.index('q2a'))
+        check('answers shown in the stored random order', ids == st['orders']['q2']) if k == 0 else None
+        if k == 0:
+            page.click('[data-action="lang"]')
+            ids_en = page.eval_on_selector_all('#q-options .opt', 'e => e.map(x => x.dataset.id)')
+            check('random order kept after language switch', ids_en == ids)
+            page.click('[data-action="lang"]')
+            page.reload(); page.wait_for_selector('#screen-quiz:not([hidden])')
+            check('random order kept after reload', page.eval_on_selector_all('#q-options .opt', 'e => e.map(x => x.dataset.id)') == ids)
+        page.evaluate("localStorage.removeItem('dfc.active')"); page.goto(BASE + 'index.html')
+    check('correct answer of Q2 appears in different positions', len(positions) >= 2, positions)
+    check('players get different answer orders', len(orders) >= 3, len(orders))
+    rec = [a for a in attempts(page) if a['name'] == 'ترتيب 0'][0]
+    check('answer order saved with the entry', rec.get('orders') and len(rec['orders']['q1']) == 9)
+    play(page, 'قبل الحذف', ALL9, ['q2a'], ['q3a']); page.click('#btn-home')
+    page.wait_for_selector('#board-home .board-item')
+    check('reset button visible on the home page', page.is_visible('#btn-reset'))
+    page.click('#btn-reset')
+    check('reset asks for confirmation first', page.is_visible('#confirm'))
+    page.click('#confirm-no')
+    check('cancel keeps all results', page.is_hidden('#confirm') and len(attempts(page)) > 0)
+    page.click('#btn-reset'); page.click('#confirm-yes'); page.wait_for_timeout(600)
+    check('reset deletes all results and empties the top five', len(attempts(page)) == 0 and page.query_selector('#board-home .board-empty') is not None)
+    ctx.close()
 
     # ---------- iPad layouts: no horizontal scroll, questions fit without scrolling ----------
     sizes = [(1180, 820, 'iPad Air landscape'), (1024, 768, 'iPad 9.7 landscape'), (1366, 1024, 'iPad Pro 12.9 landscape'),
