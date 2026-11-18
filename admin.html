@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="ar" dir="rtl" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#FAF8F4">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="format-detection" content="telephone=no">
+  <title>لوحة تحكم المنظّم</title>
+  <link rel="icon" type="image/png" href="assets/img/app-icon-192.png">
+  <link rel="stylesheet" href="css/fonts.css">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/admin.css">
+  <link rel="stylesheet" href="css/motion.css">
+  <script>
+    (function () {
+      var d = document.documentElement, t = null, l = 'ar';
+      try { t = localStorage.getItem('dfc.theme'); l = localStorage.getItem('dfc.lang') || 'ar'; } catch (e) {}
+      if (t !== 'dark' && t !== 'light') { try { t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; } catch (e) { t = 'light'; } }
+      d.setAttribute('data-theme', t);
+      if (l === 'en') { d.lang = 'en'; d.dir = 'ltr'; }
+    })();
+  </script>
+</head>
+<body class="admin">
+  <header class="topbar">
+    <div class="brand">
+      <img class="brand-logo" data-logo="logo-primary" src="assets/img/logo-primary-navy.png" alt="جبيرة JABIRA" width="587" height="180" draggable="false">
+      <span class="admin-tag" data-i18n="adminTitle"></span>
+    </div>
+    <div class="controls">
+      <button type="button" class="ctrl" data-action="lang"></button>
+      <button type="button" class="ctrl" data-action="theme"></button>
+      <button type="button" class="ctrl" id="btn-logout" hidden></button>
+    </div>
+  </header>
+
+  <main id="main" class="admin-main">
+    <!-- تسجيل الدخول / الإعداد -->
+    <section id="auth" class="auth-wrap" hidden>
+      <form class="card auth-card" id="auth-form" novalidate autocomplete="off">
+        <div class="auth-icon" id="auth-icon"></div>
+        <h1 id="auth-title"></h1>
+        <p class="muted" id="auth-desc"></p>
+        <div class="field" id="f-code" hidden>
+          <label for="in-code" data-i18n="adminRecoveryCode"></label>
+          <input class="input input-md" id="in-code" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="XXXX-XXXX-XXXX">
+        </div>
+        <div class="field">
+          <label for="in-pass" id="lbl-pass"></label>
+          <input class="input input-md" id="in-pass" type="password" autocomplete="current-password" enterkeyhint="go">
+        </div>
+        <div class="field" id="f-pass2" hidden>
+          <label for="in-pass2" data-i18n="adminPassword2"></label>
+          <input class="input input-md" id="in-pass2" type="password" autocomplete="new-password" enterkeyhint="go">
+        </div>
+        <p class="field-error" id="auth-error" role="alert" hidden></p>
+        <button type="submit" class="btn btn-primary btn-lg" id="auth-submit"></button>
+        <div class="auth-links">
+          <button type="button" class="link" id="auth-forgot" data-i18n="adminForgot"></button>
+          <a class="link" href="index.html" data-i18n="adminBackToQuiz"></a>
+        </div>
+        <p class="security-note" data-i18n="securityNote"></p>
+      </form>
+      <div class="card auth-card" id="recovery-show" hidden>
+        <div class="auth-icon" id="rec-icon"></div>
+        <p data-i18n="adminRecoveryShow"></p>
+        <p class="recovery-code num" id="recovery-code"></p>
+        <button type="button" class="btn btn-primary btn-lg" id="recovery-ok" data-i18n="adminRecoveryOk"></button>
+      </div>
+    </section>
+
+    <!-- اللوحة -->
+    <section id="dash" hidden>
+      <nav class="tabs" role="tablist" id="tabs">
+        <button type="button" role="tab" class="tab" data-tab="participants" id="tab-participants"></button>
+        <button type="button" role="tab" class="tab" data-tab="stats" id="tab-stats"></button>
+        <button type="button" role="tab" class="tab" data-tab="manage" id="tab-manage"></button>
+        <button type="button" role="tab" class="tab" data-tab="settings" id="tab-settings"></button>
+        <button type="button" role="tab" class="tab" data-tab="qr" id="tab-qr"></button>
+      </nav>
+
+      <div class="panel" id="panel-participants" role="tabpanel" aria-labelledby="tab-participants">
+        <div class="panel-head">
+          <div class="search">
+            <span id="search-icon"></span>
+            <input class="input input-md" id="search" type="search" autocomplete="off" data-i18n-ph="search" data-i18n-label="search">
+          </div>
+          <span class="muted num" id="count-label"></span>
+        </div>
+        <div class="table-wrap card">
+          <table class="table" id="table">
+            <thead><tr>
+              <th data-i18n="colRank"></th><th data-i18n="colName"></th><th data-i18n="colScore"></th><th data-i18n="colTime"></th>
+              <th data-i18n="colCorrect"></th><th data-i18n="colDate"></th><th data-i18n="colStatus"></th><th></th>
+            </tr></thead>
+            <tbody id="tbody"></tbody>
+          </table>
+          <p class="empty" id="table-empty" hidden></p>
+        </div>
+      </div>
+
+      <div class="panel" id="panel-stats" role="tabpanel" aria-labelledby="tab-stats" hidden>
+        <div class="stat-grid" id="stat-grid"></div>
+      </div>
+
+      <div class="panel" id="panel-manage" role="tabpanel" aria-labelledby="tab-manage" hidden>
+        <p class="note" data-i18n="manageNote"></p>
+        <div class="action-grid">
+          <button type="button" class="btn btn-primary btn-lg" id="act-csv"></button>
+          <button type="button" class="btn btn-secondary btn-lg" id="act-backup"></button>
+          <label class="btn btn-secondary btn-lg file-btn"><span id="act-import-label"></span><input type="file" id="act-import" accept=".json,application/json"></label>
+          <button type="button" class="btn btn-secondary btn-lg" id="act-tests"></button>
+          <button type="button" class="btn btn-secondary btn-lg" id="act-dupes"></button>
+          <button type="button" class="btn btn-danger btn-lg" id="act-reset"></button>
+        </div>
+      </div>
+
+      <div class="panel" id="panel-settings" role="tabpanel" aria-labelledby="tab-settings" hidden>
+        <div class="settings-grid">
+          <div class="card setting">
+            <h2 data-i18n="quizOpenLabel"></h2>
+            <p class="state" id="open-state"></p>
+            <button type="button" class="btn btn-primary btn-lg" id="toggle-open"></button>
+          </div>
+          <div class="card setting">
+            <h2 data-i18n="testModeLabel"></h2>
+            <p class="muted" data-i18n="testModeDesc"></p>
+            <p class="state" id="test-state"></p>
+            <button type="button" class="btn btn-secondary btn-lg" id="toggle-test"></button>
+          </div>
+          <form class="card setting" id="form-pass" novalidate autocomplete="off">
+            <h2 data-i18n="changePassword"></h2>
+            <div class="field"><label for="cp-old" data-i18n="currentPassword"></label><input class="input input-md" id="cp-old" type="password" autocomplete="current-password"></div>
+            <div class="field"><label for="cp-new" data-i18n="newPassword"></label><input class="input input-md" id="cp-new" type="password" autocomplete="new-password"></div>
+            <div class="field"><label for="cp-new2" data-i18n="adminPassword2"></label><input class="input input-md" id="cp-new2" type="password" autocomplete="new-password"></div>
+            <p class="field-error" id="cp-error" role="alert" hidden></p>
+            <button type="submit" class="btn btn-secondary btn-lg" data-i18n="changePassword"></button>
+          </form>
+          <div class="card setting">
+            <h2 data-i18n="storageInfo"></h2>
+            <p id="storage-state"></p>
+            <p class="security-note" data-i18n="securityNote"></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" id="panel-qr" role="tabpanel" aria-labelledby="tab-qr" hidden>
+        <div class="qr-layout">
+          <div class="card qr-side">
+            <h2 data-i18n="qrTitle"></h2>
+            <div class="field">
+              <span class="label" data-i18n="qrCurrent"></span>
+              <code class="url" id="qr-current"></code>
+            </div>
+            <p class="warn-box" id="qr-local-warn" hidden></p>
+            <form class="field" id="qr-form" novalidate>
+              <label for="qr-url" data-i18n="qrCustom"></label>
+              <input class="input input-md" id="qr-url" type="url" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" dir="ltr">
+              <p class="field-error" id="qr-error" role="alert" hidden></p>
+              <button type="submit" class="btn btn-secondary btn-lg" data-i18n="qrGenerate"></button>
+            </form>
+            <p class="muted" data-i18n="qrLanNote"></p>
+          </div>
+          <div class="card qr-view" id="qr-view" hidden>
+            <div class="qr-box" id="qr-box"></div>
+            <code class="url" id="qr-url-shown"></code>
+            <div class="actions-row">
+              <button type="button" class="btn btn-primary btn-lg" id="qr-copy"></button>
+              <button type="button" class="btn btn-secondary btn-lg" id="qr-full"></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- نافذة التفاصيل / التأكيد -->
+  <div class="overlay" id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="overlay-box modal-box">
+      <h2 id="modal-title"></h2>
+      <div id="modal-body" class="modal-body"></div>
+      <div class="actions-row" id="modal-actions"></div>
+    </div>
+  </div>
+  <div class="qr-full" id="qr-full-view" hidden role="dialog" aria-modal="true"><div class="qr-full-inner" id="qr-full-inner"></div></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="js/i18n.js"></script>
+  <script src="js/questions.js"></script>
+  <script src="js/scoring.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/crypto.js"></script>
+  <script src="js/qr.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

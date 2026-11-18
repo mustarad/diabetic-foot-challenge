@@ -1,0 +1,132 @@
+/* =====================================================================
+   طبقة الحركة — Motion layer (interactive animations on every screen)
+   Smooth and short; nothing flashes. All of it is switched off by
+   "Reduce Motion" in the iPad accessibility settings.
+   ===================================================================== */
+
+/* circuit band: the traces slowly flow, with a soft signal travelling along them */
+.band::before { top: -160px; bottom: 0; height: calc(100% + 160px); animation: circuitFlow 14s linear infinite; will-change: transform; }
+@keyframes circuitFlow { from { transform: translateY(0); } to { transform: translateY(160px); } }
+.band::after {
+  content: ""; position: absolute; inset-inline: 0; top: 0; height: 45%;
+  background: linear-gradient(180deg, transparent, rgba(142, 197, 232, 0.22), transparent);
+  animation: signal 4.5s ease-in-out infinite; pointer-events: none;
+}
+@keyframes signal { 0% { transform: translateY(-100%); } 100% { transform: translateY(260%); } }
+
+/* home: hero lines rise one after another */
+.screen.enter .hero > * { animation: riseIn 620ms cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--d, 0) * 90ms + 60ms); }
+@keyframes riseIn { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+.screen.enter .home-grid > .board { animation: slideIn 700ms cubic-bezier(.2,.8,.2,1) 200ms both; }
+.screen.enter .home-band { animation: fadeIn 900ms ease 120ms both; }
+@keyframes slideIn { from { opacity: 0; transform: translateX(-28px); } to { opacity: 1; transform: none; } }
+[dir="rtl"] .screen.enter .home-grid > .board { animation-name: slideInRtl; }
+@keyframes slideInRtl { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
+
+/* the trace next to the small label draws itself, then its node lights up */
+.trace path { stroke-dasharray: 60; stroke-dashoffset: 60; animation: drawTrace 900ms ease 250ms forwards; }
+.trace circle { transform-origin: 41px 12px; transform: scale(0); animation: nodeOn 400ms cubic-bezier(.3,1.6,.5,1) 1050ms forwards; }
+@keyframes drawTrace { to { stroke-dashoffset: 0; } }
+@keyframes nodeOn { to { transform: scale(1); } }
+
+/* fact chips: lift on touch */
+.facts li { transition: transform var(--t-fast), box-shadow var(--t-fast), border-color var(--t-fast); position: relative; overflow: hidden; }
+.facts li:active { transform: translateY(-2px) scale(1.03); box-shadow: var(--shadow); border-color: var(--accent-line); }
+.facts li .icon { transition: transform 300ms ease; }
+.facts li:active .icon { transform: rotate(-12deg) scale(1.15); }
+
+/* start button: gentle glow, a light sweep and an arrow that invites a tap */
+.btn { position: relative; overflow: hidden; isolation: isolate; }
+#btn-start { animation: glow 3.2s ease-in-out 1.2s infinite; }
+#btn-start::after {
+  content: ""; position: absolute; top: 0; bottom: 0; width: 40%; inset-inline-start: -60%; z-index: 0;
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,.28), transparent);
+  animation: sweep 3.2s ease-in-out 1.6s infinite; pointer-events: none;
+}
+@keyframes sweep { 0% { inset-inline-start: -60%; } 45%, 100% { inset-inline-start: 130%; } }
+@keyframes glow { 0%, 100% { box-shadow: 0 6px 18px rgba(27,73,102,.25); } 50% { box-shadow: 0 10px 34px rgba(27,73,102,.42), 0 0 0 6px rgba(90,156,196,.14); } }
+#btn-start .icon, #btn-begin .icon { animation: nudge 1.6s ease-in-out infinite; }
+@keyframes nudge { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(5px); } }
+[dir="rtl"] #btn-start .icon, [dir="rtl"] #btn-begin .icon { animation-name: nudgeRtl; }
+@keyframes nudgeRtl { 0%, 100% { transform: scaleX(-1) translateX(0); } 50% { transform: scaleX(-1) translateX(5px); } }
+
+/* touch ripple */
+.ripple { position: absolute; border-radius: 50%; pointer-events: none; z-index: 0; background: currentColor; opacity: .18; transform: scale(0); animation: ripple 600ms ease-out forwards; }
+@keyframes ripple { to { transform: scale(1); opacity: 0; } }
+.opt, .ctrl { position: relative; overflow: hidden; }
+.opt > :not(.ripple), .ctrl > :not(.ripple), .btn > :not(.ripple):not(input) { position: relative; z-index: 1; }
+.btn > .ripple, .opt > .ripple, .ctrl > .ripple, .facts li > .ripple { position: absolute; }
+
+/* staggered lists: leaderboard, answers, result tiles */
+.stagger > * { animation: itemIn 520ms cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--i, 0) * 80ms + 120ms); }
+@keyframes itemIn { from { opacity: 0; transform: translateY(14px) scale(.98); } to { opacity: 1; transform: none; } }
+.options.stagger > li { animation-duration: 420ms; animation-delay: calc(var(--i, 0) * 45ms + 80ms); }
+
+/* leaderboard: first place medal catches the light; rows respond to touch */
+.board-item { transition: transform var(--t-fast), box-shadow var(--t-fast); }
+.board-item:active { transform: scale(.985); }
+.medal.m1 { overflow: hidden; }
+.medal > span { position: relative; z-index: 1; }
+.medal.m1::before {
+  content: ""; position: absolute; inset: 0; border-radius: 50%;
+  background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,.65) 50%, transparent 70%);
+  background-size: 250% 100%; animation: medalShine 3.5s ease-in-out infinite;
+}
+@keyframes medalShine { 0% { background-position: 150% 0; } 50%, 100% { background-position: -100% 0; } }
+.board-item.me { animation: meGlow 2.4s ease-in-out 1.2s 2; }
+@keyframes meGlow { 50% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--accent) 22%, transparent); } }
+
+/* register: friendly greeting appears while typing; button wakes up when the name is valid */
+.greet { font-family: var(--font-display); font-size: 21px; font-weight: 500; color: var(--primary); }
+:root[data-theme="dark"] .greet { color: var(--navy-300); }
+.greet.show { animation: riseIn 380ms cubic-bezier(.2,.8,.2,1) both; }
+#form-register #btn-begin .icon { animation-play-state: paused; }
+#form-register.ready #btn-begin { box-shadow: 0 10px 28px rgba(27,73,102,.38); }
+#form-register.ready #btn-begin .icon { animation-play-state: running; }
+.screen.enter .register-card { animation: popCard 480ms cubic-bezier(.2,.8,.2,1) both; }
+@keyframes popCard { from { opacity: 0; transform: translateY(20px) scale(.97); } to { opacity: 1; transform: none; } }
+
+/* 3 · 2 · 1 · go */
+.overlay.countdown .overlay-box { background: transparent; box-shadow: none; padding: 0; }
+.count-num { display: inline-block; font-family: var(--font-display); font-weight: 700; font-size: 168px; line-height: 1; color: #FFFFFF; text-shadow: 0 10px 40px rgba(0,0,0,.25); }
+.overlay.countdown p { color: #FFFFFF; font-family: var(--font-display); font-size: 30px; font-weight: 600; }
+.count-num.pop-in { animation: countPop 900ms cubic-bezier(.2,.9,.25,1) both; }
+@keyframes countPop { 0% { opacity: 0; transform: scale(1.8); } 25% { opacity: 1; transform: scale(1); } 80% { opacity: 1; transform: scale(.94); } 100% { opacity: .85; transform: scale(.9); } }
+
+/* quiz: progress shimmer, timer digit flip, check mark draws itself */
+.step.current > i { position: relative; overflow: hidden; }
+.step.current > i::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent); transform: translateX(-100%); animation: shimmer 1.8s ease-in-out infinite; }
+@keyframes shimmer { to { transform: translateX(100%); } }
+#timer-val.flip { animation: flip 260ms ease both; }
+@keyframes flip { from { opacity: .2; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+.opt[aria-checked="true"] .mark .icon path { stroke-dasharray: 24; stroke-dashoffset: 24; animation: drawTrace 280ms ease forwards; }
+.opt:not([aria-checked="true"]):active .mark { transform: scale(.9); }
+.qcard.arrive .qtext { animation: riseIn 460ms cubic-bezier(.2,.8,.2,1) both; }
+.options.locked .opt[aria-checked="true"] { animation: confirmPulse 520ms ease; }
+@keyframes confirmPulse { 40% { transform: scale(1.03); } }
+
+/* results: score track fills, tiles cascade, congrats bounces in */
+.score-track { height: 14px; border-radius: var(--r-pill); background: var(--surface-2); overflow: hidden; margin-top: calc(var(--s2) * -1); }
+.score-track > i { display: block; height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, var(--navy-400), var(--primary)); transition: width 1500ms cubic-bezier(.2,.8,.2,1); }
+[dir="rtl"] .score-track > i { background: linear-gradient(270deg, var(--navy-400), var(--primary)); }
+:root[data-theme="dark"] .score-track > i { background: linear-gradient(90deg, var(--navy-500), var(--navy-300)); }
+.screen.enter .result-card { animation: popCard 520ms cubic-bezier(.2,.8,.2,1) both; }
+.screen.enter .results-side { animation: slideIn 620ms cubic-bezier(.2,.8,.2,1) 160ms both; }
+[dir="rtl"] .screen.enter .results-side { animation-name: slideInRtl; }
+.congrats { animation: bounceIn 700ms cubic-bezier(.3,1.5,.5,1) 1.4s both; }
+@keyframes bounceIn { from { opacity: 0; transform: scale(.7); } to { opacity: 1; transform: none; } }
+.congrats .medal { animation: spinIn 900ms cubic-bezier(.3,1.4,.5,1) 1.6s both; }
+@keyframes spinIn { from { transform: rotate(-200deg) scale(.4); } to { transform: none; } }
+
+/* admin dashboard: panels and cards ease in */
+.kpi, .setting, .action-grid .btn { animation: itemIn 480ms cubic-bezier(.2,.8,.2,1) both; }
+.kpi:nth-child(2), .setting:nth-child(2), .action-grid .btn:nth-child(2) { animation-delay: 70ms; }
+.kpi:nth-child(3), .setting:nth-child(3), .action-grid .btn:nth-child(3) { animation-delay: 140ms; }
+.kpi:nth-child(4), .setting:nth-child(4), .action-grid .btn:nth-child(4) { animation-delay: 210ms; }
+.kpi:nth-child(5), .action-grid .btn:nth-child(5) { animation-delay: 280ms; }
+.kpi:nth-child(6), .action-grid .btn:nth-child(6) { animation-delay: 350ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  .band::before, .band::after, #btn-start, #btn-start::after, .medal.m1::before, .step.current > i::after { animation: none !important; }
+  .trace path { stroke-dashoffset: 0; } .trace circle { transform: none; }
+}
