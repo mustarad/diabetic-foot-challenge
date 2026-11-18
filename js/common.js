@@ -111,7 +111,19 @@
   function registerSW(path) {
     try {
       var ok = 'serviceWorker' in navigator && root.isSecureContext && /^https?:$/.test(location.protocol);
-      if (ok) navigator.serviceWorker.register(path || 'sw.js').catch(function () { /* offline cache unavailable */ });
+      if (ok) {
+        var hadController = !!navigator.serviceWorker.controller;
+        // the browser itself checks sw.js for a newer version on every visit
+        navigator.serviceWorker.register(path || 'sw.js').catch(function () { /* offline cache unavailable */ });
+        // a newer version took over: refresh once so the new content shows (never mid-question)
+        var reloaded = false;
+        navigator.serviceWorker.addEventListener('controllerchange', function () {
+          if (!hadController || reloaded) return;
+          if (typeof root.__dfcCanReload === 'function' && !root.__dfcCanReload()) return;
+          reloaded = true;
+          location.reload();
+        });
+      }
     } catch (e) { /* ignore */ }
   }
 

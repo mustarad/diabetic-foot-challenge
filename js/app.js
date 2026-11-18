@@ -604,6 +604,9 @@
     });
   }
 
+  // an updated version may refresh the page only on the home or results screen
+  window.__dfcCanReload = function () { return screen === 'home' || screen === 'results'; };
+
   // expose a tiny hook for automated tests (read-only state snapshot)
   window.__dfc = { state: function () { return state ? JSON.parse(JSON.stringify(state)) : null; }, screen: function () { return screen; } };
 

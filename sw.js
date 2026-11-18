@@ -3,7 +3,7 @@
  * فتعمل الصفحة بعدها دون إنترنت ودون خادم.
  * (لا يعمل عند فتح الملف مباشرة file:// — وهذا طبيعي.)
  */
-var CACHE = 'dfc-v1.2.0';
+var CACHE = 'dfc-v1.3.0';
 var FILES = [
   './', 'index.html', 'admin.html', 'manifest.webmanifest',
   'css/fonts.css', 'css/main.css', 'css/admin.css', 'css/motion.css',
@@ -19,7 +19,10 @@ var FILES = [
 ];
 
 self.addEventListener('install', function (e) {
-  e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(FILES); }).then(function () { return self.skipWaiting(); }));
+  // cache: 'reload' skips the browser's HTTP cache so a new version never stores stale files
+  e.waitUntil(caches.open(CACHE).then(function (c) {
+    return c.addAll(FILES.map(function (f) { return new Request(f, { cache: 'reload' }); }));
+  }).then(function () { return self.skipWaiting(); }));
 });
 
 self.addEventListener('activate', function (e) {
@@ -28,24 +31,54 @@ self.addEventListener('activate', function (e) {
   }).then(function () { return self.clients.claim(); }));
 });
 
-// cache first; never needs the network once installed
+function store(req, res) {
+  if (res && res.ok && res.type === 'basic') {
+    var copy = res.clone();
+    caches.open(CACHE).then(function (c) { c.put(req, copy); });
+  }
+  return res;
+}
+function fromCache(req) {
+  return caches.match(req, { ignoreSearch: true }).then(function (hit) {
+    if (hit) return hit;
+    if (req.mode === 'navigate') return caches.match('index.html');
+    return null;
+  }).then(function (hit) {
+    // last resort: let the browser's own HTTP cache answer (works even if the saved copy was cleared)
+    return hit || fetch(req.url).catch(function () { return null; });
+  }).then(function (res) {
+    return res || new Response('', { status: 504, statusText: 'Offline' });
+  });
+}
+
+/*
+ * Pages, code and styles: NETWORK FIRST — when there is internet the newest version always shows
+ * (so edits appear right away); with no internet (or a very slow one) the saved copy is used.
+ * Fonts, images and sounds: CACHE FIRST — they never change and load instantly.
+ */
 self.addEventListener('fetch', function (e) {
-  if (e.request.method !== 'GET') return;
-  var url = new URL(e.request.url);
+  var req = e.request;
+  if (req.method !== 'GET') return;
+  var url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
-  e.respondWith(
-    caches.match(e.request, { ignoreSearch: true }).then(function (hit) {
-      if (hit) return hit;
-      return fetch(e.request).then(function (res) {
-        if (res && res.ok && res.type === 'basic') {
-          var copy = res.clone();
-          caches.open(CACHE).then(function (c) { c.put(e.request, copy); });
-        }
-        return res;
-      }).catch(function () {
-        if (e.request.mode === 'navigate') return caches.match('index.html');
-        return new Response('', { status: 504 });
-      });
-    })
-  );
+  var isCode = req.mode === 'navigate' || /\.(html|js|css|webmanifest)$/.test(url.pathname) || /\/$/.test(url.pathname);
+  if (isCode) {
+    e.respondWith(new Promise(function (resolve) {
+      var done = false;
+      var fallback = function () { if (!done) { done = true; resolve(fromCache(req)); } };
+      var timer = setTimeout(fallback, 4000);
+      // a plain request by address (not the navigation request itself) keeps Safari happy
+      fetch(new Request(req.url, { cache: 'no-cache', credentials: 'same-origin' })).then(function (res) {
+        clearTimeout(timer);
+        if (!res || !res.ok) { fallback(); return; }
+        if (res.redirected) res = new Response(res.body, { status: res.status, statusText: res.statusText, headers: res.headers });
+        store(req, res);
+        if (!done) { done = true; resolve(res); }
+      }).catch(function () { clearTimeout(timer); fallback(); });
+    }));
+    return;
+  }
+  e.respondWith(caches.match(req, { ignoreSearch: true }).then(function (hit) {
+    return hit || fetch(req).then(function (res) { return store(req, res); }).catch(function () { return fromCache(req); });
+  }));
 });
